@@ -1,0 +1,345 @@
+export default {
+  data() {
+    return {
+      cart: [],
+      showCart: false,
+      products: [
+        {
+          id: 1,
+          name: "Kopi Hitam",
+          price: 8000,
+          img: "assets/img/product.png",
+          category: "minuman",
+        },
+        {
+          id: 2,
+          name: "Teh Manis",
+          price: 5000,
+          img: "assets/img/product.png",
+          category: "minuman",
+        },
+        {
+          id: 3,
+          name: "Nasi Goreng",
+          price: 15000,
+          img: "assets/img/product.png",
+          category: "makanan",
+        },
+        {
+          id: 4,
+          name: "Mie Goreng",
+          price: 12000,
+          img: "assets/img/product.png",
+          category: "makanan",
+        },
+
+        // tambahan 15 produk
+        {
+          id: 5,
+          name: "Kopi Susu",
+          price: 10000,
+          img: "assets/img/product.png",
+          category: "minuman",
+        },
+        {
+          id: 6,
+          name: "Es Teh Manis",
+          price: 6000,
+          img: "assets/img/product.png",
+          category: "minuman",
+        },
+        {
+          id: 7,
+          name: "Es Jeruk",
+          price: 7000,
+          img: "assets/img/product.png",
+          category: "minuman",
+        },
+        {
+          id: 8,
+          name: "Nasi Ayam Goreng",
+          price: 18000,
+          img: "assets/img/product.png",
+          category: "makanan",
+        },
+        {
+          id: 9,
+          name: "Nasi Ayam Bakar",
+          price: 20000,
+          img: "assets/img/product.png",
+          category: "makanan",
+        },
+        {
+          id: 10,
+          name: "Mie Kuah",
+          price: 12000,
+          img: "assets/img/product.png",
+          category: "makanan",
+        },
+        {
+          id: 11,
+          name: "Kentang Goreng",
+          price: 10000,
+          img: "assets/img/product.png",
+          category: "snack",
+        },
+        {
+          id: 12,
+          name: "Tempe Goreng",
+          price: 5000,
+          img: "assets/img/product.png",
+          category: "snack",
+        },
+        {
+          id: 13,
+          name: "Tahu Crispy",
+          price: 6000,
+          img: "assets/img/product.png",
+          category: "snack",
+        },
+        {
+          id: 14,
+          name: "Sosis Bakar",
+          price: 8000,
+          img: "assets/img/product.png",
+          category: "snack",
+        },
+        {
+          id: 15,
+          name: "Roti Bakar Coklat",
+          price: 12000,
+          img: "assets/img/product.png",
+          category: "snack",
+        },
+        {
+          id: 16,
+          name: "Milkshake Coklat",
+          price: 14000,
+          img: "assets/img/product.png",
+          category: "minuman",
+        },
+        {
+          id: 17,
+          name: "Jus Alpukat",
+          price: 15000,
+          img: "assets/img/product.png",
+          category: "minuman",
+        },
+        {
+          id: 18,
+          name: "Jus Mangga",
+          price: 13000,
+          img: "assets/img/product.png",
+          category: "minuman",
+        },
+        {
+          id: 19,
+          name: "Nasi Telur",
+          price: 10000,
+          img: "assets/img/product.png",
+          category: "makanan",
+        },
+      ],
+
+      cart: [],
+      activeCategory: "all",
+      searchQuery: "",
+    };
+  },
+
+  computed: {
+    total() {
+      return this.cart.reduce((sum, item) => sum + item.price * item.qty, 0);
+    },
+
+    filteredProducts() {
+      let list = this.products;
+
+      if (this.activeCategory !== "all") {
+        list = list.filter((p) => p.category === this.activeCategory);
+      }
+
+      if (this.searchQuery.trim() !== "") {
+        const q = this.searchQuery.toLowerCase();
+        list = list.filter((p) => p.name.toLowerCase().includes(q));
+      }
+
+      return list;
+    },
+  },
+
+  methods: {
+    toggleCart() {
+      this.showCart = !this.showCart;
+    },
+
+    payOrder() {
+      if (this.cart.length === 0) return;
+
+      const order = {
+        items: this.cart,
+        total: this.total,
+        time: new Date().toISOString(),
+      };
+
+      console.log("ORDER PAID:", order);
+
+      alert("Transaksi berhasil");
+
+      this.cart = [];
+    },
+    clearSearch() {
+      this.searchQuery = "";
+    },
+
+    addToCart(product) {
+      const item = this.cart.find((i) => i.id === product.id);
+      if (item) {
+        item.qty++;
+      } else {
+        this.cart.push({ ...product, qty: 1 });
+      }
+    },
+
+    incQty(item) {
+      item.qty++;
+    },
+
+    decQty(item) {
+      item.qty--;
+      if (item.qty <= 0) {
+        this.cart = this.cart.filter((i) => i.id !== item.id);
+      }
+    },
+
+    formatRupiah(value) {
+      return new Intl.NumberFormat("id-ID").format(value);
+    },
+  },
+
+  template: `
+    <div class="pos-layout">
+
+      <!-- LEFT -->
+      <div class="pos-products">
+        <div class="product-header">
+          <div class="pos-search">
+          <input
+            class="product-search"
+            type="text"
+            placeholder="Cari produk..."
+            v-model="searchQuery"
+          />
+          <button
+            v-if="searchQuery"
+            class="btn-clear"
+            @click="clearSearch"
+            title="Clear"
+          >
+            ✕
+          </button>
+          </div>
+
+          <div class="category-bar">
+            <button
+              :class="{ active: activeCategory === 'all' }"
+              @click="activeCategory = 'all'"
+            >Semua</button>
+
+            <button
+              :class="{ active: activeCategory === 'makanan' }"
+              @click="activeCategory = 'makanan'"
+            >Makanan</button>
+
+            <button
+              :class="{ active: activeCategory === 'minuman' }"
+              @click="activeCategory = 'minuman'"
+            >Minuman</button>
+
+            <button
+              :class="{ active: activeCategory === 'snack' }"
+              @click="activeCategory = 'snack'"
+            >Snack</button>
+
+
+          </div>
+        </div>
+
+        <div class="product-grid">
+          <div
+            v-for="p in filteredProducts"
+            :key="p.id"
+            class="product-card"
+            @click="addToCart(p)"
+          >
+            <img :src="p.img" class="product-img" />
+            <div class="product-name">{{ p.name }}</div>
+            <div class="product-price">
+              Rp {{ formatRupiah(p.price) }}
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- RIGHT -->
+      <div
+        v-if="showCart"
+        class="cart-backdrop"
+        @click="showCart = false"
+      ></div>
+
+      <div class="pos-cart" :class="{open: showCart}">
+
+        <h3>Pesanan</h3>
+        <div class="cart-panel">
+
+          <!-- SCROLL AREA -->
+          <div class="cart-items">
+            <div
+              v-for="item in cart"
+              :key="item.id"
+              class="cart-item"
+            >
+              <div>
+                {{ item.name }}
+                <div class="cart-controls">
+                  <button @click="decQty(item)">−</button>
+                  <span class="cart-qty">{{ item.qty }}</span>
+                  <button @click="incQty(item)">+</button>
+                </div>
+              </div>
+
+              <div>
+                Rp {{ formatRupiah(item.price * item.qty) }}
+              </div>
+            </div>
+          </div>
+
+          <!-- STICKY FOOTER -->
+          <div class="cart-footer">
+            <div class="cart-total">
+              <span>Total</span>
+              <strong>{{ formatRupiah(total) }}</strong>
+            </div>
+
+            <button
+              class="btn-pay"
+              :disabled="cart.length === 0"
+              @click="payOrder"
+            >
+              BAYAR
+            </button>
+          </div>
+
+        </div>
+
+      </div>
+
+      <button class="cart-toggle" @click="toggleCart" v-show="!showCart">
+        🛒 ({{ cart.length }}::{{formatRupiah(total)}})
+      </button>
+
+    </div>
+  `,
+};
