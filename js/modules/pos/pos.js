@@ -141,13 +141,34 @@ export default {
         },
       ],
 
-      cart: [],
       activeCategory: "all",
       searchQuery: "",
+      // pembayaran
+      showPaymentModal: false,
+      showReceipt: false,
+      cashReceived: 0,
+
+      transaction: {
+        id: null,
+        date: null,
+        items: [],
+        total: 0,
+        cash: 0,
+        change: 0,
+      },
     };
   },
 
   computed: {
+    cartTotal() {
+      return this.cart.reduce((sum, item) => sum + item.price * item.qty, 0);
+    },
+    changeAmount() {
+      return this.cashReceived >= this.cartTotal
+        ? this.cashReceived - this.cartTotal
+        : 0;
+    },
+
     total() {
       return this.cart.reduce((sum, item) => sum + item.price * item.qty, 0);
     },
@@ -169,6 +190,96 @@ export default {
   },
 
   methods: {
+    openPayment() {
+      this.cashReceived = 0;
+      this.showPaymentModal = true;
+    },
+
+    closePayment() {
+      this.showPaymentModal = false;
+    },
+
+    confirmPayment() {
+      this.transaction = {
+        id: Date.now(),
+        date: new Date(),
+        items: [...this.cart],
+        total: this.cartTotal,
+        cash: this.cashReceived,
+        change: this.changeAmount,
+      };
+
+      this.cart = [];
+      this.showPaymentModal = false;
+      this.showReceipt = true;
+    },
+
+    printReceipt() {
+      const receipt = document.getElementById("receipt");
+
+      const iframe = document.createElement("iframe");
+      iframe.style.position = "fixed";
+      iframe.style.right = "0";
+      iframe.style.bottom = "0";
+      iframe.style.width = "0";
+      iframe.style.height = "0";
+      iframe.style.border = "0";
+
+      document.body.appendChild(iframe);
+
+      const doc = iframe.contentDocument || iframe.contentWindow.document;
+
+      // Build HTML via DOM (NO document.write)
+      const html = doc.createElement("html");
+      const head = doc.createElement("head");
+      const body = doc.createElement("body");
+
+      const style = doc.createElement("style");
+      style.textContent = `
+        body {
+          font-family: monospace;
+          font-size: 12px;
+          margin: 0;
+          padding: 8px;
+        }
+        .receipt-row {
+          display: flex;
+          justify-content: space-between;
+        }
+        .center {
+          text-align: center;
+        }
+        hr {
+          border-top: 1px dashed #000;
+        }
+        button {
+          display: none;
+        }
+      `;
+
+      head.appendChild(style);
+
+      // clone receipt content
+      body.innerHTML = receipt.innerHTML;
+
+      html.appendChild(head);
+      html.appendChild(body);
+
+      doc.open();
+      doc.appendChild(html);
+      doc.close();
+
+      iframe.contentWindow.focus();
+      iframe.contentWindow.print();
+
+      setTimeout(() => {
+        document.body.removeChild(iframe);
+      }, 1000);
+    },
+    formatRupiah(val) {
+      return val.toLocaleString("id-ID");
+    },
+
     toggleCart() {
       this.showCart = !this.showCart;
     },
@@ -219,7 +330,6 @@ export default {
 
   template: `
     <div class="pos-layout">
-
       <!-- LEFT -->
       <div class="pos-products">
         <div class="product-header">
@@ -326,7 +436,7 @@ export default {
             <button
               class="btn-pay"
               :disabled="cart.length === 0"
-              @click="payOrder"
+              @click="openPayment"
             >
               BAYAR
             </button>
@@ -341,5 +451,73 @@ export default {
       </button>
 
     </div>
+
+    <div v-if="showPaymentModal" class="modal-overlay">
+      <div class="modal">
+
+        <h3>Pembayaran Tunai</h3>
+
+        <div class="row">
+          <span>Total</span>
+          <strong>Rp {{ formatRupiah(cartTotal) }}</strong>
+        </div>
+
+        <div class="row">
+          <label>Uang diterima</label>
+          <input type="number"
+                 v-model.number="cashReceived"
+                 autofocus />
+        </div>
+
+        <div class="row">
+          <span>Kembalian</span>
+          <strong>Rp {{ formatRupiah(changeAmount) }}</strong>
+        </div>
+
+        <div class="actions">
+          <button @click="closePayment">Batal</button>
+          <button @click="confirmPayment"
+                  :disabled="cashReceived < cartTotal">
+            Selesaikan & Cetak
+          </button>
+        </div>
+
+      </div>
+    </div>
+    <div v-if="showReceipt" class="receipt" id="receipt">
+      <h4 class="center">TOKO POS VUE</h4>
+      <p class="center">{{ transaction.date.toLocaleString() }}</p>
+
+      <hr>
+
+      <div v-for="item in transaction.items"
+           class="receipt-row">
+        <span>{{ item.name }} x{{ item.qty }}</span>
+        <span>{{ formatRupiah(item.price * item.qty) }}</span>
+      </div>
+
+      <hr>
+
+      <div class="receipt-row">
+        <strong>Total</strong>
+        <strong>{{ formatRupiah(transaction.total) }}</strong>
+      </div>
+      <div class="receipt-row">
+        <span>Tunai</span>
+        <span>{{ formatRupiah(transaction.cash) }}</span>
+      </div>
+      <div class="receipt-row">
+        <span>Kembali</span>
+        <span>{{ formatRupiah(transaction.change) }}</span>
+      </div>
+
+      <hr>
+
+      <p class="center">Terima kasih 🙏</p>
+
+      <button @click="printReceipt">Cetak</button>
+    </div>
+
+
   `,
 };

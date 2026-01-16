@@ -466,3 +466,43 @@ button {
     background: rgba(0, 0, 0, 0.4);
     z-index: 900;
 }
+
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal {
+    background: #fff;
+    width: 300px;
+    padding: 16px;
+    border-radius: 6px;
+}
+
+.row,
+.receipt-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.actions {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 12px;
+}
+
+.receipt {
+    max-width: 280px;
+    margin: 20px auto;
+    font-family: monospace;
+}
+
+.center {
+    text-align: center;
+}
