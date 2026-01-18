@@ -147,7 +147,7 @@ export default {
       showPaymentModal: false,
       showReceipt: false,
       cashReceived: null,
-      showReceiptPreview: false,
+      isReceiptPreviewOpen: false,
 
       transaction: {
         id: null,
@@ -193,9 +193,9 @@ export default {
 
   methods: {
     closeReceiptPreview() {
-      this.showReceiptPreview = false;
+      this.isReceiptPreviewOpen = false;
     },
-    showReceiptPreview() {
+    openReceiptPreview() {
       if (this.cashReceived < this.cartTotal) return;
       this.transaction = {
         id: Date.now(),
@@ -206,7 +206,7 @@ export default {
         change: this.changeAmount,
       };
       this.showPaymentModal = false;
-      this.showReceiptPreview = true;
+      this.isReceiptPreviewOpen = true;
     },
     openPayment() {
       this.cashReceived = 0;
@@ -490,7 +490,7 @@ export default {
           type="number"
                  v-model.number="cashReceived"
                  placeholder="0"
-                 @keyup.enter="showReceiptPreview"
+                 @keyup.enter="openReceiptPreview"
                  />
         </div>
 
@@ -509,7 +509,7 @@ export default {
 
       </div>
     </div>
-    <div v-if="showReceiptPreview" class="modal-overlay">
+    <div v-if="isReceiptPreviewOpen" class="modal-overlay">
       <div class="modal receipt-preview">
 
         <h4 class="center">Preview Struk</h4>
