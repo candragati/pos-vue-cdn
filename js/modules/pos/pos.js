@@ -192,13 +192,41 @@ export default {
     },
   },
 
+  mounted() {
+    window.addEventListener("keydown", this.handleKeyDown);
+  },
+
+  beforeUnmount() {
+    window.removeEventListener("keydown", this.handleKeyDown);
+  },
+
   methods: {
+    handleKeyDown(e) {
+      if (e.key !== "Escape") return;
+      if (this.showReceiptPreview) {
+        e.preventDefault();
+        this.closeReceiptPreview();
+        return;
+      }
+      if (this.showPaymentModal) {
+        e.preventDefault();
+        this.closePaymentModal();
+        return;
+      }
+    },
+    closeCashModal() {
+      this.showpaymentModal = false;
+      this.cashReceived = 0;
+      this.cashReceivedDisplay = "";
+      this.changeAmount = 0;
+    },
     onPrintAndFinish() {
-      this.printReceipt();
       this.resetTransaction();
     },
     resetTransaction() {
+      this.closeReceiptPreview();
       this.showReceiptPreview = false;
+      this.receiptHtml = "";
       this.cashReceived = 0;
       this.cashReceivedDisplay = "";
       this.changeAmount = 0;
