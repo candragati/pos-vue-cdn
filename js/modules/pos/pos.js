@@ -147,6 +147,7 @@ export default {
       showPaymentModal: false,
       showReceipt: false,
       cashReceived: null,
+      cashReceivedDisplay: "",
       isReceiptPreviewOpen: false,
 
       transaction: {
@@ -192,6 +193,31 @@ export default {
   },
 
   methods: {
+    onPrintAndFinish() {
+      this.printReceipt();
+      this.resetTransaction();
+    },
+    resetTransaction() {
+      this.showReceiptPreview = false;
+      this.cashReceived = 0;
+      this.cashReceivedDisplay = "";
+      this.changeAmount = 0;
+      this.cart = [];
+      this.cartTotal = 0;
+      this.cartQty = 0;
+      this.$nextTick(() => {
+        const el = document.getElementById("product-search");
+        if (el) el.focus();
+      });
+    },
+    onCashInput(e) {
+      const raw = e.target.value.replace(/\D/g, "");
+      this.cashReceived = raw ? parseInt(raw) : 0;
+      this.cashReceivedDisplay = raw
+        ? new Intl.NumberFormat("id-ID").format(this.cashReceived)
+        : "";
+      this.changeAmount = this.cashReceived - this.cartTotal;
+    },
     closeReceiptPreview() {
       this.isReceiptPreviewOpen = false;
     },
@@ -209,7 +235,8 @@ export default {
       this.isReceiptPreviewOpen = true;
     },
     openPayment() {
-      this.cashReceived = 0;
+      this.cashReceived = null;
+      this.cashReceivedDisplay = "";
       this.showPaymentModal = true;
       this.$nextTick(() => {
         this.$refs.cashInput?.focus();
@@ -487,9 +514,11 @@ export default {
           <label>Uang diterima</label>
           <input
           ref="cashInput"
-          type="number"
-                 v-model.number="cashReceived"
+          type="text"
+          inputmode = "numeric"
+          :value="cashReceivedDisplay"
                  placeholder="0"
+                 @input="onCashInput"
                  @keyup.enter="openReceiptPreview"
                  />
         </div>
@@ -547,7 +576,7 @@ export default {
         </div>
 
         <div class="actions">
-          <button @click="closeReceiptPreview">Close</button>
+          <button @click="onPrintAndFinish">Close</button>
           <button @click="printReceipt">Cetak</button>
         </div>
 
