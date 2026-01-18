@@ -146,7 +146,8 @@ export default {
       // pembayaran
       showPaymentModal: false,
       showReceipt: false,
-      cashReceived: 0,
+      cashReceived: null,
+      showReceiptPreview: false,
 
       transaction: {
         id: null,
@@ -164,6 +165,7 @@ export default {
       return this.cart.reduce((sum, item) => sum + item.price * item.qty, 0);
     },
     changeAmount() {
+      if (!this.cashReceived) return 0;
       return this.cashReceived >= this.cartTotal
         ? this.cashReceived - this.cartTotal
         : 0;
@@ -190,9 +192,28 @@ export default {
   },
 
   methods: {
+    closeReceiptPreview() {
+      this.showReceiptPreview = false;
+    },
+    showReceiptPreview() {
+      if (this.cashReceived < this.cartTotal) return;
+      this.transaction = {
+        id: Date.now(),
+        date: new Date(),
+        items: [...this.cart],
+        total: this.cartTotal,
+        cash: this.cashReceived,
+        change: this.changeAmount,
+      };
+      this.showPaymentModal = false;
+      this.showReceiptPreview = true;
+    },
     openPayment() {
       this.cashReceived = 0;
       this.showPaymentModal = true;
+      this.$nextTick(() => {
+        this.$refs.cashInput?.focus();
+      });
     },
 
     closePayment() {
@@ -464,9 +485,13 @@ export default {
 
         <div class="row">
           <label>Uang diterima</label>
-          <input type="number"
+          <input
+          ref="cashInput"
+          type="number"
                  v-model.number="cashReceived"
-                 autofocus />
+                 placeholder="0"
+                 @keyup.enter="showReceiptPreview"
+                 />
         </div>
 
         <div class="row">
@@ -484,39 +509,51 @@ export default {
 
       </div>
     </div>
-    <div v-if="showReceipt" class="receipt" id="receipt">
-      <h4 class="center">TOKO POS VUE</h4>
-      <p class="center">{{ transaction.date.toLocaleString() }}</p>
+    <div v-if="showReceiptPreview" class="modal-overlay">
+      <div class="modal receipt-preview">
 
-      <hr>
+        <h4 class="center">Preview Struk</h4>
 
-      <div v-for="item in transaction.items"
-           class="receipt-row">
-        <span>{{ item.name }} x{{ item.qty }}</span>
-        <span>{{ formatRupiah(item.price * item.qty) }}</span>
+        <div id="receipt">
+          <p class="center">TOKO POS VUE</p>
+          <p class="center">{{ transaction.date.toLocaleString() }}</p>
+
+          <hr>
+
+          <div v-for="item in transaction.items"
+               class="receipt-row">
+            <span>{{ item.name }} x{{ item.qty }}</span>
+            <span>{{ formatRupiah(item.price * item.qty) }}</span>
+          </div>
+
+          <hr>
+
+          <div class="receipt-row">
+            <strong>Total</strong>
+            <strong>{{ formatRupiah(transaction.total) }}</strong>
+          </div>
+          <div class="receipt-row">
+            <span>Tunai</span>
+            <span>{{ formatRupiah(transaction.cash) }}</span>
+          </div>
+          <div class="receipt-row">
+            <span>Kembali</span>
+            <span>{{ formatRupiah(transaction.change) }}</span>
+          </div>
+
+          <hr>
+
+          <p class="center">Terima kasih 🙏</p>
+        </div>
+
+        <div class="actions">
+          <button @click="closeReceiptPreview">Close</button>
+          <button @click="printReceipt">Cetak</button>
+        </div>
+
       </div>
-
-      <hr>
-
-      <div class="receipt-row">
-        <strong>Total</strong>
-        <strong>{{ formatRupiah(transaction.total) }}</strong>
-      </div>
-      <div class="receipt-row">
-        <span>Tunai</span>
-        <span>{{ formatRupiah(transaction.cash) }}</span>
-      </div>
-      <div class="receipt-row">
-        <span>Kembali</span>
-        <span>{{ formatRupiah(transaction.change) }}</span>
-      </div>
-
-      <hr>
-
-      <p class="center">Terima kasih 🙏</p>
-
-      <button @click="printReceipt">Cetak</button>
     </div>
+
 
 
   `,
