@@ -1,145 +1,17 @@
+import { useProducts } from "../produk/produk.js";
+import { formatRupiah } from "../../utils/format.js";
+import { printReceipt } from "../../utils/printer.js";
+import { usePayment } from "../transaksi/transaksi.js";
 export default {
   data() {
+    const { products } = useProducts();
     return {
+      products,
+      formatRupiah,
+      printReceipt,
+
       cart: [],
       showCart: false,
-      products: [
-        {
-          id: 1,
-          name: "Kopi Hitam",
-          price: 8000,
-          img: "assets/img/product.png",
-          category: "minuman",
-        },
-        {
-          id: 2,
-          name: "Teh Manis",
-          price: 5000,
-          img: "assets/img/product.png",
-          category: "minuman",
-        },
-        {
-          id: 3,
-          name: "Nasi Goreng",
-          price: 15000,
-          img: "assets/img/product.png",
-          category: "makanan",
-        },
-        {
-          id: 4,
-          name: "Mie Goreng",
-          price: 12000,
-          img: "assets/img/product.png",
-          category: "makanan",
-        },
-
-        // tambahan 15 produk
-        {
-          id: 5,
-          name: "Kopi Susu",
-          price: 10000,
-          img: "assets/img/product.png",
-          category: "minuman",
-        },
-        {
-          id: 6,
-          name: "Es Teh Manis",
-          price: 6000,
-          img: "assets/img/product.png",
-          category: "minuman",
-        },
-        {
-          id: 7,
-          name: "Es Jeruk",
-          price: 7000,
-          img: "assets/img/product.png",
-          category: "minuman",
-        },
-        {
-          id: 8,
-          name: "Nasi Ayam Goreng",
-          price: 18000,
-          img: "assets/img/product.png",
-          category: "makanan",
-        },
-        {
-          id: 9,
-          name: "Nasi Ayam Bakar",
-          price: 20000,
-          img: "assets/img/product.png",
-          category: "makanan",
-        },
-        {
-          id: 10,
-          name: "Mie Kuah",
-          price: 12000,
-          img: "assets/img/product.png",
-          category: "makanan",
-        },
-        {
-          id: 11,
-          name: "Kentang Goreng",
-          price: 10000,
-          img: "assets/img/product.png",
-          category: "snack",
-        },
-        {
-          id: 12,
-          name: "Tempe Goreng",
-          price: 5000,
-          img: "assets/img/product.png",
-          category: "snack",
-        },
-        {
-          id: 13,
-          name: "Tahu Crispy",
-          price: 6000,
-          img: "assets/img/product.png",
-          category: "snack",
-        },
-        {
-          id: 14,
-          name: "Sosis Bakar",
-          price: 8000,
-          img: "assets/img/product.png",
-          category: "snack",
-        },
-        {
-          id: 15,
-          name: "Roti Bakar Coklat",
-          price: 12000,
-          img: "assets/img/product.png",
-          category: "snack",
-        },
-        {
-          id: 16,
-          name: "Milkshake Coklat",
-          price: 14000,
-          img: "assets/img/product.png",
-          category: "minuman",
-        },
-        {
-          id: 17,
-          name: "Jus Alpukat",
-          price: 15000,
-          img: "assets/img/product.png",
-          category: "minuman",
-        },
-        {
-          id: 18,
-          name: "Jus Mangga",
-          price: 13000,
-          img: "assets/img/product.png",
-          category: "minuman",
-        },
-        {
-          id: 19,
-          name: "Nasi Telur",
-          price: 10000,
-          img: "assets/img/product.png",
-          category: "makanan",
-        },
-      ],
 
       activeCategory: "all",
       searchQuery: "",
@@ -201,182 +73,19 @@ export default {
   },
 
   methods: {
+    ...usePayment(),
     handleKeyDown(e) {
       if (e.key !== "Escape") return;
-      if (this.showReceiptPreview) {
+      if (this.isReceiptPreviewOpen) {
         e.preventDefault();
         this.closeReceiptPreview();
         return;
       }
       if (this.showPaymentModal) {
         e.preventDefault();
-        this.closePaymentModal();
+        this.closePayment();
         return;
       }
-    },
-    closeCashModal() {
-      this.showpaymentModal = false;
-      this.cashReceived = 0;
-      this.cashReceivedDisplay = "";
-      this.changeAmount = 0;
-    },
-    onPrintAndFinish() {
-      this.resetTransaction();
-    },
-    resetTransaction() {
-      this.closeReceiptPreview();
-      this.showReceiptPreview = false;
-      this.receiptHtml = "";
-      this.cashReceived = 0;
-      this.cashReceivedDisplay = "";
-      this.changeAmount = 0;
-      this.cart = [];
-      this.cartTotal = 0;
-      this.cartQty = 0;
-      this.$nextTick(() => {
-        const el = document.getElementById("product-search");
-        if (el) el.focus();
-      });
-    },
-    onCashInput(e) {
-      const raw = e.target.value.replace(/\D/g, "");
-      this.cashReceived = raw ? parseInt(raw) : 0;
-      this.cashReceivedDisplay = raw
-        ? new Intl.NumberFormat("id-ID").format(this.cashReceived)
-        : "";
-      this.changeAmount = this.cashReceived - this.cartTotal;
-    },
-    closeReceiptPreview() {
-      this.isReceiptPreviewOpen = false;
-    },
-    openReceiptPreview() {
-      if (this.cashReceived < this.cartTotal) return;
-      this.transaction = {
-        id: Date.now(),
-        date: new Date(),
-        items: [...this.cart],
-        total: this.cartTotal,
-        cash: this.cashReceived,
-        change: this.changeAmount,
-      };
-      this.showPaymentModal = false;
-      this.isReceiptPreviewOpen = true;
-    },
-    openPayment() {
-      this.cashReceived = null;
-      this.cashReceivedDisplay = "";
-      this.showPaymentModal = true;
-      this.$nextTick(() => {
-        this.$refs.cashInput?.focus();
-      });
-    },
-
-    closePayment() {
-      this.showPaymentModal = false;
-    },
-
-    confirmPayment() {
-      this.transaction = {
-        id: Date.now(),
-        date: new Date(),
-        items: [...this.cart],
-        total: this.cartTotal,
-        cash: this.cashReceived,
-        change: this.changeAmount,
-      };
-
-      this.cart = [];
-      this.showPaymentModal = false;
-      this.showReceipt = true;
-    },
-
-    printReceipt() {
-      const receipt = document.getElementById("receipt");
-
-      const iframe = document.createElement("iframe");
-      iframe.style.position = "fixed";
-      iframe.style.right = "0";
-      iframe.style.bottom = "0";
-      iframe.style.width = "0";
-      iframe.style.height = "0";
-      iframe.style.border = "0";
-
-      document.body.appendChild(iframe);
-
-      const doc = iframe.contentDocument || iframe.contentWindow.document;
-
-      // Build HTML via DOM (NO document.write)
-      const html = doc.createElement("html");
-      const head = doc.createElement("head");
-      const body = doc.createElement("body");
-
-      const style = doc.createElement("style");
-      style.textContent = `
-        body {
-          font-family: monospace;
-          font-size: 12px;
-          margin: 0;
-          padding: 8px;
-        }
-        .receipt-row {
-          display: flex;
-          justify-content: space-between;
-        }
-        .center {
-          text-align: center;
-        }
-        hr {
-          border-top: 1px dashed #000;
-        }
-        button {
-          display: none;
-        }
-      `;
-
-      head.appendChild(style);
-
-      // clone receipt content
-      body.innerHTML = receipt.innerHTML;
-
-      html.appendChild(head);
-      html.appendChild(body);
-
-      doc.open();
-      doc.appendChild(html);
-      doc.close();
-
-      iframe.contentWindow.focus();
-      iframe.contentWindow.print();
-
-      setTimeout(() => {
-        document.body.removeChild(iframe);
-      }, 1000);
-    },
-    formatRupiah(val) {
-      return val.toLocaleString("id-ID");
-    },
-
-    toggleCart() {
-      this.showCart = !this.showCart;
-    },
-
-    payOrder() {
-      if (this.cart.length === 0) return;
-
-      const order = {
-        items: this.cart,
-        total: this.total,
-        time: new Date().toISOString(),
-      };
-
-      console.log("ORDER PAID:", order);
-
-      alert("Transaksi berhasil");
-
-      this.cart = [];
-    },
-    clearSearch() {
-      this.searchQuery = "";
     },
 
     addToCart(product) {
@@ -397,10 +106,6 @@ export default {
       if (item.qty <= 0) {
         this.cart = this.cart.filter((i) => i.id !== item.id);
       }
-    },
-
-    formatRupiah(value) {
-      return new Intl.NumberFormat("id-ID").format(value);
     },
   },
 
